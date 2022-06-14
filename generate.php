@@ -1,7 +1,7 @@
 <?php
 require_once('./vendor/autoload.php');
 try{
-    $count = 5;
+    $count = 20;
     $faker = \Faker\Factory::create();
 
     $pdo  = new PDO('mysql:host=localhost;dbname=images', 'root', '', array(
@@ -13,13 +13,19 @@ try{
         $name = $faker->words($nb = 2, $asText = true);
         $picsum_id = $faker->numberBetween($min = 0, $max = 1000);  
         $imagefile = str_replace(" ","_",$name).'.png';
+        $json = file_get_contents('https://picsum.photos/id/'.$picsum_id.'/info');
 
-        
-        
-        $author = $faker->randomDigit;
-        $width = $faker->randomDigit;
-        $height = $faker->randomDigit;
-        $added_at = $faker->dateTime($max = 'now', 'UTC')->format('Y-m-d H:i:s');
+        if($json == null){
+            return;
+        }else{
+            $obiekt = json_decode($json);
+            $author = $obiekt->author;
+            $width = $obiekt->width;
+            $height = $obiekt->height;
+            $img_dw = $obiekt->download_url;
+            file_put_contents('./images/'.$imagefile, file_get_contents($img_dw));
+        }
+        $added_at = date("Y-m-d H:i:s");
         
         $sql = 'INSERT INTO images (name, picsum_id, imagefile, author, width, height, added_at) 
         VALUES ("'.$name.'", "'.$picsum_id.'", "'.$imagefile.'", "'.$author.'", "'.$width.'", "'.$height.'", "'.$added_at.'")';
